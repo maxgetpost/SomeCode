@@ -6,6 +6,7 @@
  * @link http://localhost/CsvFixer.php
  * @example databaseFilePath:
  * @link C:\b\wc-product-export-6-9-2021-1630915181803.csv
+ * @link https://www.convertcsv.com/csv-viewer-editor.htm
  */
 class CsvFixer
 {
@@ -13,6 +14,7 @@ class CsvFixer
      * @example C:\b\
      */
     public $dir = __DIR__ . '\\';
+
 
     /**
      * 
@@ -22,14 +24,33 @@ class CsvFixer
         $this->findCsvFiles();
     }
 
+
+    /**
+     * 
+     */
+    function fixCell(string $cell):string
+    {
+        return $cell === '' ? '' : 1;
+    }
+
+
     /**
      * Глобальный атрибут 4: 54
      * Глобальный атрибут 5: 58 
      */
     function fixRow(array $row):array
     {
-        $row[54] = 1;
-        $row[58] = 1;
+        $columnsNubmersToFix = [54, 58];
+
+        foreach ($columnsNubmersToFix as $number) {
+
+            if (!isset($row[$number])) {
+                return $row;
+            }
+
+            $row[$number] = $this->fixCell($row[$number]);
+        }
+
         return $row;
     }
 
@@ -54,6 +75,7 @@ class CsvFixer
         return $resultArray;
     }
 
+
     /**
      * 
      */
@@ -63,22 +85,30 @@ class CsvFixer
 
         foreach ($files as $file) {
 
-            $originalCsv    = array_map('str_getcsv', file($file));
+            $fileContent    = file_get_contents($file);
+
+
+            $clearedContent = nl2br($fileContent);
+
+
+            $originalCsv    = array_map(
+                'str_getcsv', 
+                explode("\n", $clearedContent)
+            );
+
 
             $fixedCsv       = $this->fixCsv($originalCsv);
 
-            // Open a file in write mode ('w')
-            $fp = fopen($file, 'w');
+
+            $fp             = fopen($file, 'w');
   
-            // Loop through file pointer and a line
+
             foreach ($fixedCsv as $fields) {
                 
                 fputcsv($fp, $fields);
             }
   
             fclose($fp);
-
-            
         }
     }
 }
